@@ -101,6 +101,8 @@ def tree_search(problem, fringe):
     while fringe:
         node = fringe.pop()
         exploredNodes += 1
+        print(node.depth, "/", node.state.nRows * node.state.nCols)
+        #print(node.state.tostring())
         if problem.goal_test(node.state):
             return node,exploredNodes, len(fringe)
         fringe.extend(node.expand(problem))
@@ -124,7 +126,9 @@ def graph_search(problem, fringe):
     while fringe:
         node = fringe.pop()
         exploredNodes += 1
-        if problem.goal_test(node.state): 
+        print(node.depth, "/",node.state.nRows * node.state.nCols)
+        #print(node.state.tostring())
+        if problem.goal_test(node.state):
             return node,exploredNodes, len(fringe)
         if node.state not in closed:
             closed[node.state] = True
@@ -167,7 +171,7 @@ def iterative_deepening_search(problem):
     "[Fig. 3.13]"
     for depth in range(sys.maxsize):
         result = depth_limited_search(problem, depth)
-        if result is not 'cutoff':
+        if result != 'cutoff':
             return result
 
 
