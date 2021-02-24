@@ -101,7 +101,7 @@ def tree_search(problem, fringe):
     while fringe:
         node = fringe.pop()
         exploredNodes += 1
-        print(node.depth, "/", node.state.nRows * node.state.nCols)
+        #print(node.depth, "/", node.state.nRows * node.state.nCols)
         #print(node.state.tostring())
         if problem.goal_test(node.state):
             return node,exploredNodes, len(fringe)
