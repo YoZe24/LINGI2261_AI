@@ -3,6 +3,7 @@
 The way to use this code is to subclass Problem to create a class of problems,
 then create problem instances and solve them with calls to the various search
 functions."""
+import time
 
 from utils import *
 import sys
@@ -96,9 +97,10 @@ def tree_search(problem, fringe):
     """Search through the successors of a problem to find a goal.
     The argument fringe should be an empty queue.
     Don't worry about repeated paths to a state. [Fig. 3.8]"""
+    startTime = time.perf_counter()
     fringe.append(Node(problem.initial))
     exploredNodes = 0
-    while fringe:
+    while fringe and (time.perf_counter() - startTime < 180.0):
         node = fringe.pop()
         exploredNodes += 1
         #print(node.depth, "/", node.state.nRows * node.state.nCols)
@@ -120,13 +122,14 @@ def graph_search(problem, fringe):
     """Search through the successors of a problem to find a goal.
     The argument fringe should be an empty queue.
     If two paths reach a state, only use the best one. [Fig. 3.18]"""
+    startTime = time.perf_counter()
     closed = {}
     fringe.append(Node(problem.initial))
     exploredNodes = 0
-    while fringe:
+    while fringe and (time.perf_counter() - startTime < 180.0):
         node = fringe.pop()
         exploredNodes += 1
-        print(node.depth, "/",node.state.nRows * node.state.nCols)
+        #print(node.depth, "/",node.state.nRows * node.state.nCols)
         #print(node.state.tostring())
         if problem.goal_test(node.state):
             return node,exploredNodes, len(fringe)
