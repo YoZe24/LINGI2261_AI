@@ -153,6 +153,8 @@ for instance in instances:
         print("* #Nodes explored:\t", nb_explored)
         print("* Queue size at goal:\t", remaining_nodes)
     else:
-        print("bug lul")
+        print("* Execution time:\t", str(endTime - startTime))
+        print("* #Nodes explored:\t", nb_explored)
+        print("* Queue size at goal:\t", remaining_nodes)
 
     i = i + 1
