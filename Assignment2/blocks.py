@@ -16,23 +16,26 @@ goal_state = None
 #################
 class Blocks(Problem):
     def successor(self, state):
+        print(state.blocks_remaining)
+        print(state.blocks_positions)
+        print(state.get_heuristic())
         print(state)
         successors = []
         for block in state.blocks_positions:
             old_x,old_y = block
             val = state.blocks_positions[block]
-            if val != '$' and val.islower():
+            if val != '@' and val.islower():
                 left = (old_x, old_y - 1)
                 right = (old_x, old_y + 1)
-                if left[1] >= 0 and (state.grid[left[0]][left[1]] == ' ' or state.grid[left[0]][left[1]].isupper()):
+                if left[1] >= 0 and (state.grid[left[0]][left[1]] == ' ' or grid_goal[left[0]][left[1]].isupper()):
                     grid_left = []
                     for row in state.grid:
                         grid_left.append(row[:])
 
                     blocks_positions_left = dict(state.blocks_positions)
                     suc_left = State(grid_left,state.blocks_remaining,blocks_positions_left)
-                    if suc_left.grid[left[0]][left[1]].isupper():
-                        if suc_left.grid[left[0]][left[1]] == suc_left.grid[old_x][old_y].upper():
+                    if grid_goal[left[0]][left[1]].isupper():
+                        if grid_goal[left[0]][left[1]] == suc_left.grid[old_x][old_y].upper():
                             suc_left.grid[left[0]][left[1]] = '@'
                             suc_left.blocks_remaining -= 1
                     else:
@@ -42,15 +45,15 @@ class Blocks(Problem):
                     suc_left.compute_gravity()
                     successors.append(("l", suc_left))
 
-                if right[1] < len(state.grid[0]) and (state.grid[right[0]][right[1]] == ' ' or state.grid[right[0]][right[1]].isupper()):
+                if right[1] < len(state.grid[0]) and (state.grid[right[0]][right[1]] == ' ' or grid_goal[right[0]][right[1]].isupper()):
                     grid_right = []
                     for row in state.grid:
                         grid_right.append(row[:])
 
                     blocks_positions_right = dict(state.blocks_positions)
                     suc_right = State(grid_right,state.blocks_remaining,blocks_positions_right)
-                    if suc_right.grid[right[0]][right[1]].isupper():
-                        if suc_right.grid[right[0]][right[1]] == suc_right.grid[old_x][old_y].upper():
+                    if grid_goal[right[0]][right[1]].isupper():
+                        if grid_goal[right[0]][right[1]] == suc_right.grid[old_x][old_y].upper():
                             suc_right.grid[right[0]][right[1]] = '@'
                             suc_right.blocks_remaining -= 1
                     else:
@@ -75,7 +78,7 @@ class State:
         self.grid = grid
 
         if blocks_remaining == -1 and blocks_positions is None:
-            self.merge_grids()
+            #self.merge_grids()
             self.blocks_remaining = 0
             self.compute_blocks_remaining()
             self.blocks_positions = {}
@@ -86,23 +89,29 @@ class State:
             self.blocks_positions = blocks_positions
 
     def compute_blocks_remaining(self):
-        count = 0
+        count_done = 0
+        count_todo = 0
         for i in range(len(self.grid)):
             for j in range(len(self.grid[0])):
-                cell = self.grid[i][j]
-                if cell != ' ' and cell != '#' and self.grid[i][j].isupper():
-                    count += 1
-
-        self.blocks_remaining = count
+                done = self.grid[i][j]
+                todo = grid_goal[i][j]
+                if done == '@':
+                    count_done += 1
+                if todo != ' ' and todo != '#' and todo.isupper():
+                    count_todo += 1
+        self.blocks_remaining = count_todo - count_done
 
     def compute_blocks_positions(self):
         self.blocks_positions = {}
         for i in range(len(self.grid)):
             for j in range(len(self.grid[0])):
                 cell = self.grid[i][j]
+                goal_cell = grid_goal[i][j]
                 if cell != ' ' and cell != '#' and cell.islower:
                     self.blocks_positions[(i,j)] = cell
-
+                if goal_cell != ' ' and goal_cell != '#' and cell.isupper:
+                    if cell == '@':
+                        self.blocks_positions[(i,j)] = goal_cell
         self.sort_blocks_positions()
 
     def sort_blocks_positions(self):
@@ -120,9 +129,9 @@ class State:
             val = self.blocks_positions[block]
             if val.islower():
                 x,y = block
-                while x + 1 < self.nbr and ((y < self.nbc and self.grid[x + 1][y] != '#' and self.grid[x + 1][y] == ' ') or self.grid[x + 1][y].isupper()):
-                    if self.grid[x + 1][y].isupper():
-                        if self.grid[x][y].upper() == self.grid[x + 1][y]:
+                while x + 1 < self.nbr and self.grid[x + 1][y] != '@' and ((y < self.nbc and self.grid[x + 1][y] != '#' and self.grid[x + 1][y] == ' ') or grid_goal[x + 1][y].isupper()):
+                    if grid_goal[x + 1][y].isupper():
+                        if self.grid[x][y].upper() == grid_goal[x + 1][y]:
                             self.grid[x + 1][y] = '@'
                             self.blocks_remaining -= 1
                         else:
@@ -141,6 +150,7 @@ class State:
             if block.isupper():
                 dist = self.distance(x, y, block)
                 sum_dist += dist
+        print("sum : ",sum_dist)
         return sum_dist
 
     def distance(self, x_goal, y_goal, target):
@@ -190,7 +200,7 @@ instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10']
 k = 1
 #for instance in [instances_path + name for name in instance_names]:
 print("Instance : ", k)
-grid_init, grid_goal = readInstanceFile(instances_path + instance_names[0])
+grid_init, grid_goal = readInstanceFile(instances_path + instance_names[2])
 init_state = State(grid_init)
 # goal_state = State(grid_goal)
 problem = Blocks(init_state)
