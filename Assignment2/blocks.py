@@ -16,10 +16,6 @@ goal_state = None
 #################
 class Blocks(Problem):
     def successor(self, state):
-        print(state.blocks_remaining)
-        print(state.blocks_positions)
-        print(state.get_heuristic())
-        print(state)
         successors = []
         for block in state.blocks_positions:
             old_x,old_y = block
@@ -33,7 +29,7 @@ class Blocks(Problem):
                         grid_left.append(row[:])
 
                     blocks_positions_left = dict(state.blocks_positions)
-                    suc_left = State(grid_left,state.blocks_remaining,blocks_positions_left)
+                    suc_left = State(grid_left,state.blocks_remaining,blocks_positions_left,state.goals)
                     if grid_goal[left[0]][left[1]].isupper():
                         if grid_goal[left[0]][left[1]] == suc_left.grid[old_x][old_y].upper():
                             suc_left.grid[left[0]][left[1]] = '@'
@@ -51,7 +47,7 @@ class Blocks(Problem):
                         grid_right.append(row[:])
 
                     blocks_positions_right = dict(state.blocks_positions)
-                    suc_right = State(grid_right,state.blocks_remaining,blocks_positions_right)
+                    suc_right = State(grid_right,state.blocks_remaining,blocks_positions_right,state.goals)
                     if grid_goal[right[0]][right[1]].isupper():
                         if grid_goal[right[0]][right[1]] == suc_right.grid[old_x][old_y].upper():
                             suc_right.grid[right[0]][right[1]] = '@'
@@ -72,21 +68,23 @@ class Blocks(Problem):
 # State class #
 ###############
 class State:
-    def __init__(self, grid, blocks_remaining = -1, blocks_positions = None):
+    def __init__(self, grid, blocks_remaining = -1, blocks_positions = None, goals = None):
         self.nbr = len(grid)
         self.nbc = len(grid[0])
         self.grid = grid
 
         if blocks_remaining == -1 and blocks_positions is None:
-            #self.merge_grids()
             self.blocks_remaining = 0
             self.compute_blocks_remaining()
             self.blocks_positions = {}
             self.compute_blocks_positions()
+            self.goals = {}
+            self.compute_goals()
             self.compute_gravity()
         else:
             self.blocks_remaining = blocks_remaining
             self.blocks_positions = blocks_positions
+            self.goals = goals
 
     def compute_blocks_remaining(self):
         count_done = 0
@@ -109,7 +107,7 @@ class State:
                 goal_cell = grid_goal[i][j]
                 if cell != ' ' and cell != '#' and cell.islower:
                     self.blocks_positions[(i,j)] = cell
-                if goal_cell != ' ' and goal_cell != '#' and cell.isupper:
+                if goal_cell != ' ' and goal_cell != '#' and goal_cell.isupper:
                     if cell == '@':
                         self.blocks_positions[(i,j)] = goal_cell
         self.sort_blocks_positions()
@@ -145,12 +143,12 @@ class State:
 
     def get_heuristic(self):
         sum_dist = 0
-        for position, block in self.blocks_positions.items():
+        for position, block in self.goals.items():
             x, y = position
             if block.isupper():
                 dist = self.distance(x, y, block)
                 sum_dist += dist
-        print("sum : ",sum_dist)
+
         return sum_dist
 
     def distance(self, x_goal, y_goal, target):
@@ -176,6 +174,15 @@ class State:
                 s += '\n'
         return s + "\n" + "#" * n_sharp
 
+    def compute_goals(self):
+        self.goals = {}
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[0])):
+                goal_cell = grid_goal[i][j]
+                if goal_cell != ' ' and goal_cell != '#' and goal_cell.isupper:
+                    self.goals[(i, j)] = goal_cell
+
+
 ######################
 # Auxiliary function #
 ######################
@@ -197,10 +204,8 @@ def heuristic(heu):
 instances_path = "instances/"
 instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10']
 
-k = 1
 #for instance in [instances_path + name for name in instance_names]:
-print("Instance : ", k)
-grid_init, grid_goal = readInstanceFile(instances_path + instance_names[2])
+grid_init, grid_goal = readInstanceFile(instances_path + instance_names[0])
 init_state = State(grid_init)
 # goal_state = State(grid_goal)
 problem = Blocks(init_state)
@@ -225,7 +230,6 @@ if node:
     print("* #Nodes explored:\t", nb_explored)
     print("* Queue size at goal:\t", remaining_nodes)
 
-k += 1
 print("-----------------------------------------")
 
 ####################################
