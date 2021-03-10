@@ -7,7 +7,6 @@ NAMES OF THE STUDENTS :
 - Eliot Hennebo <eliot.hennebo@student.uclouvain.be>
 """
 from Assignment2.search import *
-import sys
 import time
 
 goal_state = None
@@ -31,6 +30,8 @@ def create_successor(state, old_position, position, val):
     new_suc.compute_gravity()
     return new_suc
 
+
+
 #################
 # Problem class #
 #################
@@ -40,16 +41,18 @@ class Blocks(Problem):
         for block in state.blocks_positions:
             old_x,old_y = block
             val = state.blocks_positions[block]
-            if val != '@':
+            if val.islower():
                 left = (old_x, old_y - 1)
                 right = (old_x, old_y + 1)
-                if left[1] >= 0 and state.grid[left[0]][left[1]] == ' ':
+                if left[1] >= 0 and (state.grid[left[0]][left[1]] == ' '):
                     suc_left = create_successor(state, block, left, val)
-                    successors.append(("l", suc_left))
+                    if suc_left.is_state_valid():
+                        successors.append(("l", suc_left))
 
-                if right[1] < len(state.grid[0]) and state.grid[right[0]][right[1]] == ' ':
+                if right[1] < len(state.grid[0]) and (state.grid[right[0]][right[1]] == ' '):
                     suc_right = create_successor(state, block, right, val)
-                    successors.append(("r", suc_right))
+                    if suc_right.is_state_valid():
+                        successors.append(("r", suc_right))
 
         return successors
 
@@ -77,6 +80,19 @@ class State:
             self.blocks_remaining = blocks_remaining
             self.blocks_positions = blocks_positions
             self.goals = goals
+
+    def is_state_valid(self):
+        for(xg,yg), blockg in self.goals.items():
+            same_invalid = 0
+            same = 0
+            for (x,y),block in self.blocks_positions.items():
+                if block.upper() == blockg:
+                    same += 1
+                    if x > xg:
+                        same_invalid += 1
+            if same_invalid != 0 and same == same_invalid:
+                return False
+        return True
 
     def compute_blocks_remaining(self):
         count_done = 0
@@ -115,33 +131,26 @@ class State:
             if val.islower():
                 x,y = block
                 while x + 1 < self.nbr \
-                        and (self.grid[x + 1][y] == ' ' or grid_goal[x + 1][y].isupper()):
+                        and (self.grid[x + 1][y] == ' '):
 
-                    #if grid_goal[x + 1][y].isupper():
-                    if self.grid[x][y].upper() == grid_goal[x + 1][y] \
-                            and (x+2 == self.nbr or self.grid[x+2][y] != ' '):
+                    if self.grid[x][y].upper() == grid_goal[x + 1][y]\
+                            and(x+2 == self.nbr or self.grid[x+2][y] != ' '):
                         self.grid[x + 1][y] = '@'
                         self.blocks_remaining -= 1
                     else:
                         self.grid[x + 1][y] = self.grid[x][y]
-                #else:
-                     #   self.grid[x + 1][y] = self.grid[x][y]
 
                     self.grid[x][y] = ' '
-                    self.compute_blocks_positions()
                     x = x + 1
+
+                self.compute_blocks_positions()
 
     def get_heuristic(self):
         sum_dist = 0
-        print("start heuristic : ", self.blocks_positions)
         for (x,y), block in self.goals.items():
-            #x, y = position
-            #if block.isupper():
-            #todo si 2 goals de même lettre, assigner 1 block à chaque lettre
             dist = self.distance(x, y, block)
             sum_dist += dist
 
-        print("heuristic end ",sum_dist," ;", self.blocks_positions)
         self.compute_blocks_positions()
         return sum_dist
 
@@ -149,19 +158,17 @@ class State:
         min_dist = -1
         block_to_del = (-1,-1)
         for (x, y), block in self.blocks_positions.items():
-            #block.islower()
             if block.upper() == target \
-                    and x <= x_goal \
-                    and ((min_dist == -1) or (abs(y - y_goal) < min_dist)):
-                min_dist = abs(y - y_goal)
+                    and ((min_dist == -1) or (abs(y - y_goal) + abs(x - x_goal) < min_dist)):
+                min_dist = abs(y - y_goal) + abs(x - x_goal)
                 block_to_del = (x,y)
 
+        if min_dist < 0:
+            min_dist = 0
+
         if block_to_del != (-1,-1):
-            print("before", self.blocks_positions)
             self.blocks_positions.pop(block_to_del)
-            print("after", self.blocks_positions)
-        #del self.blocks_positions(block_to_del)
-        return int(min_dist)
+        return min_dist
 
     def __str__(self):
         n_sharp = self.nbc + 2
@@ -174,6 +181,15 @@ class State:
             if i < self.nbr - 1:
                 s += '\n'
         return s + "\n" + "#" * n_sharp
+
+    def __hash__(self):
+        return hash(str(self.grid))
+
+    def __eq__(self, other):
+        return str(self.grid) == str(other.grid)
+
+    def __ne__(self, other):
+        return not (self == other)
 
     def compute_goals(self):
         self.goals = {}
@@ -202,11 +218,12 @@ def heuristic(heu):
 ##############################
 #Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
+
 instances_path = "instances/"
 instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10']
 
 #for instance in [instances_path + name for name in instance_names]:
-grid_init, grid_goal = readInstanceFile(instances_path + instance_names[5])
+grid_init, grid_goal = readInstanceFile(instances_path + instance_names[2])
 init_state = State(grid_init)
 # goal_state = State(grid_goal)
 problem = Blocks(init_state)
@@ -237,6 +254,7 @@ print("-----------------------------------------")
 # Launch the search for INGInious  #
 ####################################
 #Use this block to test your code on INGInious
+
 '''
 instance = sys.argv[1]
 grid_init, grid_goal = readInstanceFile(instance)
@@ -262,3 +280,4 @@ print("* Path cost to goal:\t", node.depth, "moves")
 print("* #Nodes explored:\t", nb_explored)
 print("* Queue size at goal:\t",  remaining_nodes)
 '''
+
