@@ -88,7 +88,6 @@ class Node:
             if visited is None or next not in visited:
                 yield Node(next, self, act, problem.path_cost(self.path_cost, self.state, act, next))
 
-
 #______________________________________________________________________________
 ## Uninformed Search algorithms
 
@@ -101,8 +100,6 @@ def tree_search(problem, fringe):
     while fringe:
         node = fringe.pop()
         exploredNodes += 1
-        #print(node.depth, "/", node.state.nRows * node.state.nCols)
-        #print(node.state.tostring())
         if problem.goal_test(node.state):
             return node,exploredNodes, len(fringe)
         fringe.extend(node.expand(problem))
@@ -126,9 +123,7 @@ def graph_search(problem, fringe):
     while fringe:
         node = fringe.pop()
         exploredNodes += 1
-        print(node.depth, "/",node.state.nRows * node.state.nCols)
-        #print(node.state.tostring())
-        if problem.goal_test(node.state):
+        if problem.goal_test(node.state): 
             return node,exploredNodes, len(fringe)
         if node.state not in closed:
             closed[node.state] = True

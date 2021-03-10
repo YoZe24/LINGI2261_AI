@@ -3,8 +3,10 @@
 """
 import bisect
 
-#______________________________________________________________________________
+# ______________________________________________________________________________
 # Queues: Stack, FIFOQueue, PriorityQueue
+import abstract
+
 
 class Queue:
     """Queue is an abstract class/interface. There are three types:
@@ -19,28 +21,35 @@ class Queue:
     Note that isinstance(Stack(), Queue) is false, because we implement stacks
     as lists.  If Python ever gets interfaces, Queue will be an interface."""
 
-    def __init__(self): 
+    def __init__(self):
         abstract
 
     def extend(self, items):
         for item in items: self.append(item)
 
+
 def Stack():
     """Return an empty list, suitable as a Last-In-First-Out Queue."""
     return []
 
+
 class FIFOQueue(Queue):
     """A First-In-First-Out Queue."""
+
     def __init__(self):
-        self.A = []#; self.start = 0
+        self.A = []  # ; self.start = 0
+
     def append(self, item):
         self.A.append(item)
+
     def __len__(self):
-        return len(self.A) #- self.start
+        return len(self.A)  # - self.start
+
     def extend(self, items):
-        self.A.extend(items)     
-    def pop(self): 
-        e = self.A.pop(0)       
+        self.A.extend(items)
+
+    def pop(self):
+        e = self.A.pop(0)
         # e = self.A[self.start]
         # self.start += 1
         # if self.start > 5 and self.start > len(self.A)/2:
@@ -48,35 +57,41 @@ class FIFOQueue(Queue):
         #     self.start = 0
         return e
 
+
 class PriorityQueueElmt:
     """ The elements of the priority queue """
-    def __init__(self,val,e):
+
+    def __init__(self, val, e):
         self.val = val
         self.e = e
-    
-    def __lt__(self,other):
+
+    def __lt__(self, other):
         return self.val < other.val
-    
+
     def value(self):
         return self.val
-    
+
     def elem(self):
         return self.e
-        
+
 
 class PriorityQueue(Queue):
     """A queue in which the minimum (or maximum) element (as determined by f and
     order) is returned first. If order is min, the item with minimum f(x) is
     returned first; if order is max, then it is the item with maximum f(x)."""
+
     def __init__(self, f, order=min):
-        self.A=[]
-        self.order=order
-        self.f=f
+        self.A = []
+        self.order = order
+        self.f = f
+
     def append(self, item):
-        queueElmt = PriorityQueueElmt(self.f(item),item)
+        queueElmt = PriorityQueueElmt(self.f(item), item)
         bisect.insort(self.A, queueElmt)
+
     def __len__(self):
         return len(self.A)
+
     def pop(self):
         if self.order == min:
             return self.A.pop(0).elem()

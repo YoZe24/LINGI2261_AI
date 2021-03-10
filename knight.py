@@ -12,7 +12,8 @@ from search import *
 #################
 
 # Legal moves of the knight
-moves = [(-2, -1),(-1, -2),(-2, 1),(1, -2),(-1, 2),(2, -1),(1, 2),(2, 1)]
+moves = [(-2, -1), (-1, -2), (-2, 1), (1, -2), (-1, 2), (2, -1), (1, 2), (2, 1)]
+
 
 def create_state(old_x, old_y, new_x, new_y, state):
     """
@@ -24,12 +25,13 @@ def create_state(old_x, old_y, new_x, new_y, state):
     :param state: current state from which we generate the new position
     :return: new state containing the new position of the knight
     """
-    new_state = State([state.nRows, state.nCols],(new_x, new_y))
+    new_state = State([state.nRows, state.nCols], (new_x, new_y))
     new_state.grid = [row[:] for row in state.grid]
     new_state.grid[old_x][old_y] = u"\u265E"
     new_state.grid[new_x][new_y] = u"\u2658"
     new_state.cost = state.cost + 1
     return new_state
+
 
 def count_legal_moves(state):
     """
@@ -38,10 +40,11 @@ def count_legal_moves(state):
     :return: void
     """
     for i in range(8):
-        if check_legal_move(state,i):
+        if check_legal_move(state, i):
             state.nbMoves = state.nbMoves + 1
 
-def check_legal_move(state,i):
+
+def check_legal_move(state, i):
     """
     Checks if a move is legal in a certain state
     :param state: State from which we want to check a move
@@ -50,10 +53,11 @@ def check_legal_move(state,i):
              False otherwise
     """
     old_pos = state.knight_pos
-    new_pos = (old_pos[0] + moves[i][0],old_pos[1] + moves[i][1])
+    new_pos = (old_pos[0] + moves[i][0], old_pos[1] + moves[i][1])
     return 0 <= new_pos[0] < state.nRows \
-            and 0 <= new_pos[1] < state.nCols \
-            and state.grid[new_pos[0]][new_pos[1]] == " "
+           and 0 <= new_pos[1] < state.nCols \
+           and state.grid[new_pos[0]][new_pos[1]] == " "
+
 
 class Knight(Problem):
     def successor(self, state):
@@ -73,7 +77,7 @@ class Knight(Problem):
                 count_legal_moves(potential)
                 states.append(potential)
 
-        states.sort(key = lambda x: x.nbMoves, reverse=True)
+        states.sort(key=lambda x: x.nbMoves, reverse=True)
 
         for suc in states:
             yield (suc.knight_pos[0], suc.knight_pos[1]), suc
@@ -87,6 +91,7 @@ class Knight(Problem):
         """
         goal = (state.nRows * state.nCols)
         return state.cost + 1 == goal
+
 
 ###############
 # State class #
@@ -125,17 +130,18 @@ class State:
             print(i)
         print("\n")
 
+
 ##############################
 # Launch the search in local #
 ##############################
-#Use this block to test your code in local
+# Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
-'''
+
 with open('instances.txt') as f:
     instances = f.read().splitlines()
 
-#for instance in instances:
-    elts = instances[10].split(" ")
+    # for instance in instances:
+    elts = instances[1].split(" ")
     shape = (int(elts[0]), int(elts[1]))
     init_pos = (int(elts[2]), int(elts[3]))
     init_state = State(shape, init_pos)
@@ -185,3 +191,4 @@ print("* Execution time:\t", str(endTime - startTime))
 print("* Path cost to goal:\t", node.depth, "moves")
 print("* #Nodes explored:\t", nb_explored)
 print("* Queue size at goal:\t",  remaining_nodes)
+'''
