@@ -3,14 +3,34 @@
 NAME OF THE AUTHOR :
 - Gaël Aglin <gael.aglin@uclouvain.be>
 NAMES OF THE STUDENTS :
-- Mehdi Ben Haddou <mehdi.benhaddou@uclouvain.be>
-- Eliot Hennebo <eliot.hennebo@uclouvain.be>
+- Mehdi Ben Haddou <mehdi.benhaddou@student.uclouvain.be>
+- Eliot Hennebo <eliot.hennebo@student.uclouvain.be>
 """
 from search import *
 import sys
 import time
 
 goal_state = None
+
+def create_successor(state, old_position, position, val):
+    new_grid = []
+    for row in state.grid:
+        new_grid.append(row[:])
+
+    new_blocks_positions = dict(state.blocks_positions)
+    new_suc = State(new_grid, state.blocks_remaining, new_blocks_positions, state.goals)
+    if grid_goal[position[0]][position[1]].isupper():
+        if grid_goal[position[0]][position[1]] == new_suc.grid[old_position[0]][old_position[1]].upper():
+            new_suc.grid[position[0]][position[1]] = '@'
+            new_suc.blocks_remaining -= 1
+    else:
+        new_suc.grid[position[0]][position[1]] = val
+
+    new_suc.grid[old_position[0]][old_position[1]] = ' '
+    new_suc.compute_blocks_positions()
+    new_suc.compute_gravity()
+    return new_suc
+
 #################
 # Problem class #
 #################
@@ -24,40 +44,12 @@ class Blocks(Problem):
                 left = (old_x, old_y - 1)
                 right = (old_x, old_y + 1)
                 if left[1] >= 0 and (state.grid[left[0]][left[1]] == ' ' or grid_goal[left[0]][left[1]].isupper()):
-                    grid_left = []
-                    for row in state.grid:
-                        grid_left.append(row[:])
-
-                    blocks_positions_left = dict(state.blocks_positions)
-                    suc_left = State(grid_left,state.blocks_remaining,blocks_positions_left,state.goals)
-                    if grid_goal[left[0]][left[1]].isupper():
-                        if grid_goal[left[0]][left[1]] == suc_left.grid[old_x][old_y].upper():
-                            suc_left.grid[left[0]][left[1]] = '@'
-                            suc_left.blocks_remaining -= 1
-                    else:
-                        suc_left.grid[left[0]][left[1]] = val
-                    suc_left.grid[old_x][old_y] = ' '
-                    suc_left.compute_blocks_positions()
-                    suc_left.compute_gravity()
+                    suc_left = create_successor(state, block, left, val)
                     successors.append(("l", suc_left))
 
                 if right[1] < len(state.grid[0]) and (state.grid[right[0]][right[1]] == ' ' or grid_goal[right[0]][right[1]].isupper()):
-                    grid_right = []
-                    for row in state.grid:
-                        grid_right.append(row[:])
-
-                    blocks_positions_right = dict(state.blocks_positions)
-                    suc_right = State(grid_right,state.blocks_remaining,blocks_positions_right,state.goals)
-                    if grid_goal[right[0]][right[1]].isupper():
-                        if grid_goal[right[0]][right[1]] == suc_right.grid[old_x][old_y].upper():
-                            suc_right.grid[right[0]][right[1]] = '@'
-                            suc_right.blocks_remaining -= 1
-                    else:
-                        suc_right.grid[right[0]][right[1]] = val
-                    suc_right.grid[old_x][old_y] = ' '
-                    suc_right.compute_blocks_positions()
-                    suc_right.compute_gravity()
-                    successors.append(("l", suc_right))
+                    suc_right = create_successor(state, block, right, val)
+                    successors.append(("r", suc_right))
 
         return successors
 
@@ -97,6 +89,7 @@ class State:
                     count_done += 1
                 if todo != ' ' and todo != '#' and todo.isupper():
                     count_todo += 1
+
         self.blocks_remaining = count_todo - count_done
 
     def compute_blocks_positions(self):
@@ -110,6 +103,7 @@ class State:
                 if goal_cell != ' ' and goal_cell != '#' and goal_cell.isupper:
                     if cell == '@':
                         self.blocks_positions[(i,j)] = goal_cell
+
         self.sort_blocks_positions()
 
     def sort_blocks_positions(self):
@@ -138,8 +132,8 @@ class State:
                         self.grid[x + 1][y] = self.grid[x][y]
 
                     self.grid[x][y] = ' '
-                    x = x + 1
                     self.compute_blocks_positions()
+                    x = x + 1
 
     def get_heuristic(self):
         sum_dist = 0
