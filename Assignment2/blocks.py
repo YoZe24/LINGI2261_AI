@@ -133,6 +133,7 @@ class State:
 
     def get_heuristic(self):
         sum_dist = 0
+        print("start heuristic : ", self.blocks_positions)
         for (x,y), block in self.goals.items():
             #x, y = position
             #if block.isupper():
@@ -140,17 +141,26 @@ class State:
             dist = self.distance(x, y, block)
             sum_dist += dist
 
+        print("heuristic end ",sum_dist," ;", self.blocks_positions)
+        self.compute_blocks_positions()
         return sum_dist
 
     def distance(self, x_goal, y_goal, target):
         min_dist = -1
+        block_to_del = (-1,-1)
         for (x, y), block in self.blocks_positions.items():
             #block.islower()
             if block.upper() == target \
                     and x <= x_goal \
                     and ((min_dist == -1) or (abs(y - y_goal) < min_dist)):
                 min_dist = abs(y - y_goal)
+                block_to_del = (x,y)
 
+        if block_to_del != (-1,-1):
+            print("before", self.blocks_positions)
+            self.blocks_positions.pop(block_to_del)
+            print("after", self.blocks_positions)
+        #del self.blocks_positions(block_to_del)
         return int(min_dist)
 
     def __str__(self):
@@ -196,7 +206,7 @@ instances_path = "instances/"
 instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10']
 
 #for instance in [instances_path + name for name in instance_names]:
-grid_init, grid_goal = readInstanceFile(instances_path + instance_names[2])
+grid_init, grid_goal = readInstanceFile(instances_path + instance_names[5])
 init_state = State(grid_init)
 # goal_state = State(grid_goal)
 problem = Blocks(init_state)
