@@ -3,13 +3,15 @@
 The way to use this code is to subclass Problem to create a class of problems,
 then create problem instances and solve them with calls to the various search
 functions."""
-
+import abstract
 from utils import *
 import sys
 import math
 import random
 
 #______________________________________________________________________________
+from Assignment2.utils import FIFOQueue, Stack, PriorityQueue
+
 
 class Problem:
     """The abstract class for a formal problem.  You should subclass this and
@@ -167,7 +169,7 @@ def iterative_deepening_search(problem):
     "[Fig. 3.13]"
     for depth in range(sys.maxsize):
         result = depth_limited_search(problem, depth)
-        if result is not 'cutoff':
+        if result != 'cutoff':
             return result
 
 

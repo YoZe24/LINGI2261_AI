@@ -6,7 +6,7 @@ NAMES OF THE STUDENTS :
 - Mehdi Ben Haddou <mehdi.benhaddou@student.uclouvain.be>
 - Eliot Hennebo <eliot.hennebo@student.uclouvain.be>
 """
-from search import *
+from Assignment2.search import *
 import sys
 import time
 
@@ -19,8 +19,8 @@ def create_successor(state, old_position, position, val):
 
     new_blocks_positions = dict(state.blocks_positions)
     new_suc = State(new_grid, state.blocks_remaining, new_blocks_positions, state.goals)
-    if grid_goal[position[0]][position[1]].isupper():
-        if grid_goal[position[0]][position[1]] == new_suc.grid[old_position[0]][old_position[1]].upper():
+    if grid_goal[position[0]][position[1]] == val.upper() \
+            and (position[0]+1 == len(new_grid) or new_grid[position[0]+1][position[1]] != ' '):
             new_suc.grid[position[0]][position[1]] = '@'
             new_suc.blocks_remaining -= 1
     else:
@@ -40,14 +40,14 @@ class Blocks(Problem):
         for block in state.blocks_positions:
             old_x,old_y = block
             val = state.blocks_positions[block]
-            if val != '@' and val.islower():
+            if val != '@':
                 left = (old_x, old_y - 1)
                 right = (old_x, old_y + 1)
-                if left[1] >= 0 and (state.grid[left[0]][left[1]] == ' ' or grid_goal[left[0]][left[1]].isupper()):
+                if left[1] >= 0 and state.grid[left[0]][left[1]] == ' ':
                     suc_left = create_successor(state, block, left, val)
                     successors.append(("l", suc_left))
 
-                if right[1] < len(state.grid[0]) and (state.grid[right[0]][right[1]] == ' ' or grid_goal[right[0]][right[1]].isupper()):
+                if right[1] < len(state.grid[0]) and state.grid[right[0]][right[1]] == ' ':
                     suc_right = create_successor(state, block, right, val)
                     successors.append(("r", suc_right))
 
@@ -109,27 +109,23 @@ class State:
     def sort_blocks_positions(self):
         self.blocks_positions = {key: self.blocks_positions[key] for key in sorted(self.blocks_positions,key = lambda el : el[0], reverse= True)}
 
-    def merge_grids(self):
-        for i in range(len(grid_goal)):
-            for j in range(len(grid_goal[0])):
-                cell = grid_goal[i][j]
-                if cell != ' ' and cell != '#' and cell.isupper:
-                    self.grid[i][j] = cell
-
     def compute_gravity(self):
         for block in self.blocks_positions:
             val = self.blocks_positions[block]
             if val.islower():
                 x,y = block
-                while x + 1 < self.nbr and self.grid[x + 1][y] != '@' and ((y < self.nbc and self.grid[x + 1][y] != '#' and self.grid[x + 1][y] == ' ') or grid_goal[x + 1][y].isupper()):
-                    if grid_goal[x + 1][y].isupper():
-                        if self.grid[x][y].upper() == grid_goal[x + 1][y]:
-                            self.grid[x + 1][y] = '@'
-                            self.blocks_remaining -= 1
-                        else:
-                            self.grid[x + 1][y] = self.grid[x][y]
+                while x + 1 < self.nbr \
+                        and (self.grid[x + 1][y] == ' ' or grid_goal[x + 1][y].isupper()):
+
+                    #if grid_goal[x + 1][y].isupper():
+                    if self.grid[x][y].upper() == grid_goal[x + 1][y] \
+                            and (x+2 == self.nbr or self.grid[x+2][y] != ' '):
+                        self.grid[x + 1][y] = '@'
+                        self.blocks_remaining -= 1
                     else:
                         self.grid[x + 1][y] = self.grid[x][y]
+                #else:
+                     #   self.grid[x + 1][y] = self.grid[x][y]
 
                     self.grid[x][y] = ' '
                     self.compute_blocks_positions()
@@ -137,19 +133,20 @@ class State:
 
     def get_heuristic(self):
         sum_dist = 0
-        for position, block in self.goals.items():
-            x, y = position
-            if block.isupper():
-                dist = self.distance(x, y, block)
-                sum_dist += dist
+        for (x,y), block in self.goals.items():
+            #x, y = position
+            #if block.isupper():
+            #todo si 2 goals de même lettre, assigner 1 block à chaque lettre
+            dist = self.distance(x, y, block)
+            sum_dist += dist
 
         return sum_dist
 
     def distance(self, x_goal, y_goal, target):
         min_dist = -1
         for (x, y), block in self.blocks_positions.items():
-            if block.islower() \
-                    and block.upper() == target \
+            #block.islower()
+            if block.upper() == target \
                     and x <= x_goal \
                     and ((min_dist == -1) or (abs(y - y_goal) < min_dist)):
                 min_dist = abs(y - y_goal)
@@ -199,7 +196,7 @@ instances_path = "instances/"
 instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10']
 
 #for instance in [instances_path + name for name in instance_names]:
-grid_init, grid_goal = readInstanceFile(instances_path + instance_names[0])
+grid_init, grid_goal = readInstanceFile(instances_path + instance_names[2])
 init_state = State(grid_init)
 # goal_state = State(grid_goal)
 problem = Blocks(init_state)
