@@ -88,6 +88,7 @@ class Node:
             if visited is None or next not in visited:
                 yield Node(next, self, act, problem.path_cost(self.path_cost, self.state, act, next))
 
+
 #______________________________________________________________________________
 ## Uninformed Search algorithms
 
@@ -166,7 +167,7 @@ def iterative_deepening_search(problem):
     "[Fig. 3.13]"
     for depth in range(sys.maxsize):
         result = depth_limited_search(problem, depth)
-        if result != 'cutoff':
+        if result is not 'cutoff':
             return result
 
 
