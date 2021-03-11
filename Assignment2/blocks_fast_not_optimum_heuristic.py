@@ -166,9 +166,9 @@ class State:
         block_to_del = (-1,-1)
         for (x, y), block in self.blocks_positions.items():
             if block.upper() == target \
-                    and ((min_dist == -1) or (abs(y - y_goal) < min_dist)):
+                    and ((min_dist == -1) or (abs(y - y_goal) + abs(x-x_goal) < min_dist)):
                 to_add = 0
-                min_dist = abs(y - y_goal)
+                min_dist = abs(y - y_goal)+abs(x-x_goal)
                 block_to_del = (x,y)
 
                 for i in range(x+1,x_goal):
