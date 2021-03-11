@@ -1,0 +1,68 @@
+Instance : 1
+Number of moves: 12
+* Execution time:	 0.013544
+* Path cost to goal:	 12 moves
+* #Nodes explored:	 60
+* Queue size at goal:	 28
+-----------------------------------------
+Instance : 2
+Number of moves: 11
+* Execution time:	 0.001609299999999994
+* Path cost to goal:	 11 moves
+* #Nodes explored:	 12
+* Queue size at goal:	 1
+-----------------------------------------
+Instance : 3
+Number of moves: 7
+* Execution time:	 0.005370700000000006
+* Path cost to goal:	 7 moves
+* #Nodes explored:	 28
+* Queue size at goal:	 23
+-----------------------------------------
+Instance : 4
+Number of moves: 20
+* Execution time:	 0.09564210000000001
+* Path cost to goal:	 20 moves
+* #Nodes explored:	 442
+* Queue size at goal:	 5
+-----------------------------------------
+Instance : 5
+Number of moves: 48
+* Execution time:	 1.8908234000000002
+* Path cost to goal:	 48 moves
+* #Nodes explored:	 2774
+* Queue size at goal:	 1404
+-----------------------------------------
+Instance : 6
+Number of moves: 21
+* Execution time:	 2.6490909000000005
+* Path cost to goal:	 21 moves
+* #Nodes explored:	 4161
+* Queue size at goal:	 1940
+-----------------------------------------
+Instance : 7
+Number of moves: 16
+* Execution time:	 1.8934913000000009
+* Path cost to goal:	 16 moves
+* #Nodes explored:	 3496
+* Queue size at goal:	 1726
+-----------------------------------------
+Instance : 8
+Number of moves: 19
+* Execution time:	 0.8808829999999999
+* Path cost to goal:	 19 moves
+* #Nodes explored:	 2296
+* Queue size at goal:	 1561
+-----------------------------------------
+Instance : 9
+Number of moves: 25
+* Execution time:	 3.4295850000000003
+* Path cost to goal:	 25 moves
+* #Nodes explored:	 4552
+* Queue size at goal:	 2905
+-----------------------------------------
+Instance : 10
+* Execution time:	 10.044346299999999
+* #Nodes explored:	 19501
+* Queue size at goal:	 12991
+-----------------------------------------
