@@ -235,7 +235,7 @@ instances_path = "instances/"
 instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10']
 
 #for instance in [instances_path + name for name in instance_names]:
-grid_init, grid_goal = readInstanceFile(instances_path + instance_names[7])
+grid_init, grid_goal = readInstanceFile(instances_path + instance_names[6])
 init_state = State(grid_init)
 # goal_state = State(grid_goal)
 problem = Blocks(init_state)
