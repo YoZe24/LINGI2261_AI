@@ -5,7 +5,6 @@ import bisect
 
 # ______________________________________________________________________________
 # Queues: Stack, FIFOQueue, PriorityQueue
-import abstract
 
 
 class Queue:
