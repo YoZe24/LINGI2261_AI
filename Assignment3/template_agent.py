@@ -27,13 +27,18 @@ class AI(Player):
     state s.
     """
     def successors(self, state):
-        pass  # TODO replace by your code
+
+        actions = SeegaRules.get_player_actions(state,self.position)
+        for action in actions:
+            state_copy = deepcopy(state)
+            yield SeegaRules.act(state_copy,action,self.position)
 
     """
     The cutoff function returns true if the alpha-beta/minimax
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
+
         pass  # TODO replace by your code
 
     """
