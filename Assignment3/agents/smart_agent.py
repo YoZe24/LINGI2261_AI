@@ -1,6 +1,7 @@
-from Assignment3.core.player import Player, Color
-from Assignment3.seega.seega_rules import SeegaRules
+from core.player import Player, Color
+from seega.seega_rules import SeegaRules
 from copy import deepcopy
+from time import time
 
 """
 python main.py -ai0 ./seega/random_agent.py -ai1 agents/smart_agent.py -s 0.5 -t 120
@@ -10,19 +11,26 @@ class AI(Player):
 
     in_hand = 12
     score = 0
-    name = "BASIC"
+    name = "SMART"
 
     def __init__(self, color):
         super(AI, self).__init__(color)
         self.position = color.value
+        self.clock = 0
+        self.turn_start_time = 0
 
     def play(self, state, remain_time):
         print("")
         print(f"Player {self.position} is playing.")
         print("time remain is ", remain_time, " seconds")
 
-        # TODO : Changer la strat qd ils lancent les cailloux au début
-        return minimax_search(state, self)
+        if state.phase == 1:
+            player = self.position
+            return SeegaRules.random_play(state, player)
+        else:
+            self.clock = remain_time
+            self.turn_start_time = time()
+            return minimax_search(state, self)
 
     """
     The successors function must return (or yield) a list of
@@ -30,25 +38,38 @@ class AI(Player):
     state s.
     """
     def successors(self, state):
-        # TODO : =)
-        pass
+        successors = []
+        player = self.position
+        all_actions = SeegaRules.get_player_actions(state, player)
+        for action in all_actions:
+            potential = deepcopy(state)
+            SeegaRules.act(potential, action, player)
+            suc = (action, potential)
+            successors.append(suc)
 
+        return successors
 
     """
     The cutoff function returns true if the alpha-beta/minimax
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        # TODO : =)
-        pass
+        max_depth = 10
+        max_turn_time = round(self.clock * 0.05)
+        time_elapsed = self.turn_start_time - time()
+
+        time_finished = time_elapsed >= max_turn_time
+        return time_finished or depth > max_depth or SeegaRules.is_end_game(state)
 
     """
     The evaluate function must return an integer value
     representing the utility function of the board.
     """
     def evaluate(self, state):
-        # TODO : =)
-        pass
+        player = self.position
+        opponent = self.position * (-1)
+        boring = state.boring_moves
+        return (state.score[player] + (state.MAX_SCORE - state.score[opponent])) - boring
 
     """
     Specific methods for a Seega player (do not modify)
