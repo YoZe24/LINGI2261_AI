@@ -20,17 +20,18 @@ class AI(Player):
         self.turn_start_time = 0
 
     def play(self, state, remain_time):
-        print("")
-        print(f"Player {self.position} is playing.")
-        print("time remain is ", remain_time, " seconds")
+        # print("")
+        # print(f"Player {self.position} is playing.")
+        # print("time remain is ", remain_time, " seconds")
 
-        if state.phase == 1:
-            player = self.position
-            return SeegaRules.random_play(state, player)
-        else:
-            self.clock = remain_time
-            self.turn_start_time = time()
-            return minimax_search(state, self)
+        # if state.phase == 1:
+        #     player = self.position
+        #     print("phase 1")
+        #     return SeegaRules.random_play(state, player)
+        # else:
+        self.clock = remain_time
+        self.turn_start_time = time()
+        return minimax_search(state, self)
 
     """
     The successors function must return (or yield) a list of
@@ -40,12 +41,13 @@ class AI(Player):
     def successors(self, state):
         successors = []
         player = self.position
-        all_actions = SeegaRules.get_player_actions(state, player)
-        for action in all_actions:
+        for action in SeegaRules.get_player_actions(state, player):
             potential = deepcopy(state)
             SeegaRules.act(potential, action, player)
-            suc = (action, potential)
+            suc = (action,potential)
             successors.append(suc)
+        # print("nb succ : "+ str(len(successors)) )
+        # print(successors)
 
         return successors
 
@@ -54,11 +56,16 @@ class AI(Player):
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        max_depth = 10
-        max_turn_time = round(self.clock * 0.05)
+        if state.phase == 1:
+            max_depth = 2
+        else :
+            max_depth = 4
+        max_turn_time = round(self.clock * 0.01)
         time_elapsed = self.turn_start_time - time()
 
         time_finished = time_elapsed >= max_turn_time
+        if SeegaRules.is_player_stuck(state,self.position * -1):
+            print("fdp is stuck")
         return time_finished or depth > max_depth or SeegaRules.is_end_game(state)
 
     """
@@ -66,10 +73,54 @@ class AI(Player):
     representing the utility function of the board.
     """
     def evaluate(self, state):
-        player = self.position
-        opponent = self.position * (-1)
-        boring = state.boring_moves
-        return (state.score[player] + (state.MAX_SCORE - state.score[opponent])) - boring
+        board_value = 0
+        if state.phase == 1:
+            cpt_middle = 0
+            for cell in state.board.get_player_pieces_on_board(self.color):
+                x,y = cell
+                if (x,y) == (0,2) or (x,y) == (2,0) or (x,y) == (4,2) or (x,y) == (2,4):
+                    board_value += 3
+                elif cpt_middle < 2 and ((x,y) == (1,2) or (x,y) == (2,1) or (x,y) == (3,2) or (x,y) == (2,3)):
+                    cpt_middle+=1
+                    board_value += 3
+                    cell_cpt = 0
+                    for pair_move in pair_moves( (x,y) ):
+                        if state.board.get_cell_color(pair_move) == Color.green:
+                            if ++cell_cpt == 1: #first elem of pair_moves is the best move from 3 possibles opposite
+                                board_value += 2
+                            else:
+                                board_value += 1
+
+                elif x == 0 or x == 4 or y == 0 or y == 4:
+                    board_value += 2
+                else:
+                    board_value += 1
+            return board_value
+        else:
+            player = self.position
+            opponent = self.position * (-1)
+            boring = state.boring_moves
+            op_color = Color(opponent)
+            possibles_moves = ( (-1,0), (1,0), (0,-1), (0,1) )
+            for cell in state.board.get_player_pieces_on_board(self.color):
+                for neighbour_dif in possibles_moves:
+                    neighbour = sum_cell(cell,neighbour_dif)
+                    if state.board.get_cell_color(neighbour) == op_color:
+                        opposite_cell = get_opposite(neighbour,cell)
+                        if state.board.get_cell_color(opposite_cell) != op_color: # if board !=  B G B  (this case is safe for the moment)
+                            for potential_killer in possibles_moves: # if B G 0 and one B around 0 (0 = blanck) => opponent take next turn
+                                if state.board.get_cell_color( sum_cell(opposite_cell,potential_killer) ) == op_color:
+                                    board_value -= 4
+                                    break;
+
+                        board_value += 1
+                    if state.board.is_center(cell):
+                        board_value += 2
+
+
+            return ((state.score[player] + (state.MAX_SCORE - state.score[opponent])) - boring)*5 + board_value
+
+
 
     """
     Specific methods for a Seega player (do not modify)
@@ -94,6 +145,30 @@ Adapted from:
 """
 
 inf = float("inf")
+
+def get_opposite(cellToOppose,cell):
+    if cellToOppose[0] == cell[0]:
+        return cell[0],(cell[1]-cellToOppose[1])
+    if cellToOppose[1] == cell[1]:
+        return (cell[0]-cellToOppose[0]), cell[1]
+
+def sum_cell(cell1,cell2):
+    return cell1[0] + cell2[0] , cell1[1] + cell2[1]
+
+def pair_moves(cell):
+    x,y = cell
+    cellB = 0,2
+    cellL = 2,0
+    cellU = 4,2
+    cellR = 2,4
+    if (x,y) == (1,2):
+        return [cellU,cellL,cellR]
+    if (x,y) == (3,2):
+        return [cellB,cellL,cellR]
+    if (x,y) == (2,1):
+        return [cellR,cellU,cellB]
+    if (x,y) == (2,3):
+        return [cellL,cellU,cellB]
 
 def minimax_search(state, player, prune=True):
     """Perform a MiniMax/AlphaBeta search and return the best action.
