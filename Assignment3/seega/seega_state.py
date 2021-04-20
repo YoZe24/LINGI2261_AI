@@ -25,7 +25,7 @@ class SeegaState(object):
             next_player (int, optional): The next or first play at the start. Defaults to -1.
             boring_limit (int, optional): Limit of non rewarding moves. Defaults to 200.
         """
-
+        self.min_dist = 1
         self.board = board
         self._latest_player = None
         self._latest_move = None
@@ -71,6 +71,8 @@ class SeegaState(object):
         return {'in_hand': self.in_hand[player],
                 'score': self.score[player]}
 
+
+
     def get_json_state(self):
         json_state = {'latest_player': self.get_latest_player(),
                       'latest_move': self.get_latest_move(),
@@ -84,3 +86,13 @@ class SeegaState(object):
                       'board': self.board.get_json_board(),
                       }
         return json.dumps(json_state, default=str)
+
+
+    def __hash__(self):
+        return hash(str(self.board))
+
+    def __eq__(self, other):
+        return str(self.board) == str(other.board)
+
+    def __ne__(self, other):
+        return not (self == other)

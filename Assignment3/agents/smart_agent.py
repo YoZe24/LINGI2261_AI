@@ -1,4 +1,7 @@
+import math
+
 from core.player import Player, Color
+from seega import SeegaState
 from seega.seega_rules import SeegaRules
 from copy import deepcopy
 from time import time
@@ -29,6 +32,7 @@ class AI(Player):
         #     print("phase 1")
         #     return SeegaRules.random_play(state, player)
         # else:
+
         self.clock = remain_time
         self.turn_start_time = time()
         return minimax_search(state, self)
@@ -43,11 +47,25 @@ class AI(Player):
         player = self.position
         for action in SeegaRules.get_player_actions(state, player):
             potential = deepcopy(state)
-            SeegaRules.act(potential, action, player)
+            # if state.phase == 2:
+            #     last_move = action.get_action_as_dict()["action"]["to"]
+            #     state.min_dist = get_nearest_cell(last_move,state.board.get_player_pieces_on_board(Color(self.position * -1)))
+                # nearest_cell = get_nearest_cell(last_move)
+
+            res = SeegaRules.act(potential, action, player)
+            # if type(res) is bool and not res:
+            #     continue
             suc = (action,potential)
             successors.append(suc)
-        # print("nb succ : "+ str(len(successors)) )
-        # print(successors)
+
+        # successors.sort(key=lambda succ: succ[1].min_dist)
+
+        successors = list(set(successors))
+        for s in successors:
+            print(str(s[0].get_json_action()) + " => " + str(s[1].get_json_state()))
+
+        successors.sort(key=lambda x: self.evaluate(x[1]), reverse=True)
+        successors = successors[:math.ceil(len(successors) * 0.75)]
 
         return successors
 
@@ -57,15 +75,14 @@ class AI(Player):
     """
     def cutoff(self, state, depth):
         if state.phase == 1:
-            max_depth = 2
+            max_depth = 0
         else :
             max_depth = 4
         max_turn_time = round(self.clock * 0.01)
         time_elapsed = self.turn_start_time - time()
-
         time_finished = time_elapsed >= max_turn_time
-        if SeegaRules.is_player_stuck(state,self.position * -1):
-            print("fdp is stuck")
+        # if SeegaRules.is_player_stuck(state,self.position * -1):
+        #     print("fdp is stuck")
         return time_finished or depth > max_depth or SeegaRules.is_end_game(state)
 
     """
@@ -102,24 +119,33 @@ class AI(Player):
             boring = state.boring_moves
             op_color = Color(opponent)
             possibles_moves = ( (-1,0), (1,0), (0,-1), (0,1) )
+
+            # print(state.get_json_state())
             for cell in state.board.get_player_pieces_on_board(self.color):
+                if state.board.is_center(cell):
+                    board_value += 2
+                    continue
+
                 for neighbour_dif in possibles_moves:
                     neighbour = sum_cell(cell,neighbour_dif)
                     if state.board.get_cell_color(neighbour) == op_color:
                         opposite_cell = get_opposite(neighbour,cell)
-                        if state.board.get_cell_color(opposite_cell) != op_color: # if board !=  B G B  (this case is safe for the moment)
+                        board_value += 1
+                        if state.board.get_cell_color(opposite_cell) == Color.empty: # if board !=  B G B  (this case is safe for the moment)
                             for potential_killer in possibles_moves: # if B G 0 and one B around 0 (0 = blanck) => opponent take next turn
-                                if state.board.get_cell_color( sum_cell(opposite_cell,potential_killer) ) == op_color:
-                                    board_value -= 4
+                                killer = sum_cell(opposite_cell,potential_killer)
+                                if state.board.get_cell_color( killer ) == op_color:
+                                    print(str(neighbour) + " - " + str(cell) + " - " + str(opposite_cell) + " killer : " +str(killer))
+                                    board_value -= 3
                                     break;
 
-                        board_value += 1
                     if state.board.is_center(cell):
                         board_value += 2
 
 
-            return ((state.score[player] + (state.MAX_SCORE - state.score[opponent])) - boring)*5 + board_value
+            score = ((state.score[player] + (state.MAX_SCORE - state.score[opponent])) - boring)*4 + board_value
 
+        return score
 
 
     """
@@ -146,11 +172,25 @@ Adapted from:
 
 inf = float("inf")
 
-def get_opposite(cellToOppose,cell):
-    if cellToOppose[0] == cell[0]:
-        return cell[0],(cell[1]-cellToOppose[1])
-    if cellToOppose[1] == cell[1]:
-        return (cell[0]-cellToOppose[0]), cell[1]
+def get_nearest_cell(cell,opponent_cells):
+    min_dist = 999999
+    for op_cell in opponent_cells:
+        # op_cell = op_action.get_action_as_dict()["action"]["to"]
+        dist = abs(cell[0] - op_cell[0]) + abs(cell[1] - op_cell[1])
+        if dist < min_dist:
+            min_dist = dist
+    return min_dist
+
+def get_opposite(cell_to_oppose, cell):
+    if cell_to_oppose[0] == cell[0]:
+        if cell_to_oppose[1] > cell[1]:
+            return cell[0],cell[1]-1
+        return cell[0],cell[1]+1
+
+    if cell_to_oppose[1] == cell[1]:
+        if cell_to_oppose[0] > cell[0]:
+            return cell[0]-1,cell[1]
+        return cell[0]+1, cell[1]
 
 def sum_cell(cell1,cell2):
     return cell1[0] + cell2[0] , cell1[1] + cell2[1]
@@ -184,6 +224,7 @@ def minimax_search(state, player, prune=True):
             return player.evaluate(state), None
         val = -inf
         action = None
+        print("call max succ " + str(state.get_json_state()))
         for a, s in player.successors(state):
             if s.get_latest_player() == s.get_next_player():  # next turn is for the same player
                 v, _ = max_value(s, alpha, beta, depth + 1)
@@ -203,6 +244,7 @@ def minimax_search(state, player, prune=True):
             return player.evaluate(state), None
         val = inf
         action = None
+        print("call min succ " + str(state.get_json_state()))
         for a, s in player.successors(state):
             if s.get_latest_player() == s.get_next_player():  # next turn is for the same player
                 v, _ = min_value(s, alpha, beta, depth + 1)
