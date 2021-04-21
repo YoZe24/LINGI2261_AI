@@ -138,10 +138,10 @@ class AI(Player):
                                 if state.board.get_cell_color( killer ) == op_color:
                                     # print(str(neighbour) + " - " + str(cell) + " - " + str(opposite_cell_bad) + " bad killer : " +str(killer))
 
-                                    if neighbour not in killeds:
-                                        board_value -= 3
-                                        killeds.append(cell)
-                                        killers.append(killer)
+                                    # if neighbour not in killeds:
+                                    board_value -= 3
+                                    killeds.append(cell)
+                                    killers.append(killer)
                                     # else:
                                         # print("can't kill, cell or neighbour already tooked")
                                     break
@@ -159,12 +159,12 @@ class AI(Player):
                                     killeds.append(neighbour)
                                     board_value += 3
 
-                                    if cell in killeds:
-                                        # print(str(cell) + "couldn't be killed, remove penalisation")
-                                        board_value += 3
-                                    if neighbour in killers:
-                                        # print(str(neighbour) + " couldn't be killer, remove penalisation")
-                                        board_value += 3
+                                    # if cell in killeds:
+                                    #     # print(str(cell) + "couldn't be killed, remove penalisation")
+                                    #     board_value += 3
+                                    # if neighbour in killers:
+                                    #     # print(str(neighbour) + " couldn't be killer, remove penalisation")
+                                    #     board_value += 3
                                     break
 
                     if state.board.is_center(cell):
