@@ -1,4 +1,6 @@
 import math
+import random
+from collections import defaultdict
 
 from core.player import Player, Color
 from seega import SeegaState
@@ -14,13 +16,15 @@ class AI(Player):
 
     in_hand = 12
     score = 0
-    name = "SMART"
+    name = "SMART NO OPTI"
 
     def __init__(self, color):
         super(AI, self).__init__(color)
         self.position = color.value
         self.clock = 0
         self.turn_start_time = 0
+        self._states = defaultdict(lambda: 0)
+
 
     def play(self, state, remain_time):
         # print("")
@@ -45,28 +49,30 @@ class AI(Player):
     def successors(self, state):
         successors = []
         player = self.position
+        opp = player*-1
         for action in SeegaRules.get_player_actions(state, player):
             potential = deepcopy(state)
-            # if state.phase == 2:
-            #     last_move = action.get_action_as_dict()["action"]["to"]
-            #     state.min_dist = get_nearest_cell(last_move,state.board.get_player_pieces_on_board(Color(self.position * -1)))
-                # nearest_cell = get_nearest_cell(last_move)
-
             res = SeegaRules.act(potential, action, player)
-            # if type(res) is bool and not res:
-            #     continue
+
+            if state.phase == 2 and SeegaRules.is_player_stuck(state,opp) and SeegaRules.is_player_stuck(potential,opp):
+                continue
+
+            # if not self._is_in_states(potential):
             suc = (action,potential)
             successors.append(suc)
+            # self._add_state(potential)
 
         # successors.sort(key=lambda succ: succ[1].min_dist)
 
-        successors = list(set(successors))
-        # for s in successors:
-        #     print(str(s[0].get_json_action()) + " => " + str(s[1].get_json_state()))
+        if state.phase == 1:
+            random.shuffle(successors)
 
         successors.sort(key=lambda x: self.evaluate(x[1]), reverse=True)
-        successors = successors[:math.ceil(len(successors) * 0.75)]
 
+        if len(successors) > 4:
+            successors = successors[:math.ceil(len(successors) * 0.50)]
+
+        print(len(successors))
         return successors
 
     """
@@ -78,7 +84,9 @@ class AI(Player):
             max_depth = 2
         else :
             max_depth = 12
-        max_turn_time = self.clock * 0.015
+            # print("cutoff depth ::: " + str(depth))
+
+        max_turn_time = self.clock * 0.020
         time_elapsed = abs(self.turn_start_time - time())
         time_finished = time_elapsed >= max_turn_time
         return time_finished or depth > max_depth or SeegaRules.is_end_game(state)
@@ -124,7 +132,6 @@ class AI(Player):
             for cell in state.board.get_player_pieces_on_board(self.color):
                 if state.board.is_center(cell):
                     board_value += 2
-                    continue
 
                 for neighbour_dif in possibles_moves:
                     neighbour = sum_cell(cell,neighbour_dif)
@@ -132,49 +139,76 @@ class AI(Player):
                     if state.board.get_cell_color(neighbour) == op_color:
                         board_value += 1
                         opposite_cell_bad = get_opposite(neighbour,cell)
+
                         if state.board.get_cell_color(opposite_cell_bad) == Color.empty: # if board !=  B G B  (this case is safe for the moment)
+                            if state.board.is_center(cell):
+                                continue
+
                             for potential_killer in possibles_moves: # if B G 0 and one B around 0 (0 = blanck) => opponent take next turn
                                 killer = sum_cell(opposite_cell_bad,potential_killer)
                                 if state.board.get_cell_color( killer ) == op_color:
                                     # print(str(neighbour) + " - " + str(cell) + " - " + str(opposite_cell_bad) + " bad killer : " +str(killer))
 
-                                    # if neighbour not in killeds:
-                                    board_value -= 3
-                                    killeds.append(cell)
-                                    killers.append(killer)
+                                    if state.get_next_player() == player:
+                                        value = 3
+                                    else:
+                                        value = 4
+
+                                    if neighbour not in killeds:
+                                        board_value -= value
+                                        killeds.append(cell)
+                                        killers.append(killer)
                                     # else:
-                                        # print("can't kill, cell or neighbour already tooked")
+                                    #print("can't kill, cell or neighbour already tooked")
                                     break
 
-                        if state.board.is_center(neighbour):
-                            continue
+
 
                         opposite_cell_good = get_opposite(cell,neighbour)
                         if state.board.get_cell_color(opposite_cell_good) == Color.empty:
+                            if state.board.is_center(neighbour):
+                                continue
                             for potential_killer in possibles_moves:
                                 killer = sum_cell(opposite_cell_good,potential_killer)
                                 if state.board.get_cell_color(killer) == self.color:
                                     # print(str(neighbour) + " - " + str(cell) + " - " + str(opposite_cell_good) + " good killer : " +str(killer))
                                     killers.append(killer)
                                     killeds.append(neighbour)
-                                    board_value += 3
 
-                                    # if cell in killeds:
-                                    #     # print(str(cell) + "couldn't be killed, remove penalisation")
-                                    #     board_value += 3
-                                    # if neighbour in killers:
-                                    #     # print(str(neighbour) + " couldn't be killer, remove penalisation")
-                                    #     board_value += 3
+                                    if state.get_next_player() == player:
+                                        value = 4
+                                    else:
+                                        value = 3
+
+                                    board_value += value
+
+                                    if state.get_next_player() == player:
+                                        if cell in killeds:
+                                            # print(str(cell) + "couldn't be killed, remove penalisation")
+                                            board_value += 3
+                                        if neighbour in killers:
+                                            # print(str(neighbour) + " couldn't be killer, remove penalisation")
+                                            board_value += 3
                                     break
 
-                    if state.board.is_center(cell):
-                        board_value += 2
+            score = (state.score[player] + (state.MAX_SCORE - state.score[opponent])) * 10 + board_value
 
-
-            score = ((state.score[player] + (state.MAX_SCORE - state.score[opponent])) - boring)*4 + board_value
+            if SeegaRules.is_end_game(state):
+                score += 100 if state.score[player] > state.score[opponent] else -100
 
         return score
 
+
+    def _hash_state(self, state):
+        board = state.board.get_json_board()
+        list_board = tuple(tuple(l) for l in board)
+        return list_board
+
+    def _is_in_states(self, state):
+        return self._hash_state(state) in self._states
+
+    def _add_state(self, state):
+        self._states[self._hash_state(state)] += 1
 
     """
     Specific methods for a Seega player (do not modify)
