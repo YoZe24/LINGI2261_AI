@@ -1,3 +1,4 @@
+Link for the report : https://fr.overleaf.com/read/dkngcvfvjrtb
 # MAIC2020-Seega
 Third edition of the Mify Artificial Intelligence Contest #MIFY #AAAIBenin
 
