@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 """NAMES OF THE AUTHOR(S): Gaël Aglin <gael.aglin@uclouvain.be>"""
+import time
+
 from search import *
 from copy import deepcopy
 import sys
@@ -162,16 +164,27 @@ def randomized_maxvalue(problem, limit=100, callback=None):
 #       Launch      #
 #####################
 if __name__ == '__main__':
-    info = read_instance(sys.argv[1])
+    ### For INGINIOUS ###
+    # info = read_instance(sys.argv[1])
+
+    info = read_instance("instances/i01.txt")
     init_state = State(info[0], info[1])
     bp_problem = BinPacking(init_state)
 
     step_limit = 100
-    choose = 1
+    choose = 0
+    start = time.time()
 
     if not choose:
         node = maxvalue(bp_problem, step_limit)
-    else:
+    elif choose:
         node = randomized_maxvalue(bp_problem, step_limit)
+    else:
+        node = random_walk(bp_problem, step_limit)
+
+    time = time.time() - start
 
     print(node.state)
+    print("T(s) : " + str(time))
+    print("Fitness : " + str(bp_problem.fitness(node.state)))
+    print("Nb. Steps : " + str(node.step))
