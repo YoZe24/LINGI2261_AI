@@ -1,6 +1,6 @@
 from clause import *
 
-from Assignment4.cgp.clause import Clause
+# from Assignment4.cgp.clause import Clause
 
 """
 For the color grid problem, the only code you have to do is in this file.
@@ -18,8 +18,8 @@ Read the comment on top of clause.py to see how this works.
 """
 
 
-def get_moves():
-    pass
+def get_moves(dist):
+    return [(0,dist), (dist,0), (0,-dist), (-dist, 0), (dist,-dist), (-dist,dist), (dist,dist), (-dist,-dist)]
 
 
 def get_expression(size, points=None):
@@ -36,8 +36,17 @@ def get_expression(size, points=None):
             cell_color_clause = Clause(size)
             for k in range(size):
                 cell_color_clause.add_positive(i,j,k)
-                for wtf in range(size):
-                    get_moves()
+                for dist in range(size):
+
+                    for dist_i, dist_j in get_moves(dist):
+                        x,y = i+dist_i, j+dist_j
+
+                        if x != i or y != j:
+                            if 0 <= x < size and 0 <= y < size:
+                                star_clause = Clause(size)
+                                star_clause.add_negative(i,j,k)
+                                star_clause.add_negative(x,y,k)
+                                expression.append(star_clause)
 
             expression.append(cell_color_clause)
 
