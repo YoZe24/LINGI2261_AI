@@ -19,7 +19,8 @@ Read the comment on top of clause.py to see how this works.
 
 
 def get_moves(dist):
-    return [(0,dist), (dist,0), (0,-dist), (-dist, 0), (dist,-dist), (-dist,dist), (dist,dist), (-dist,-dist)]
+    return [(0,-dist), (-dist, 0),  (-dist,dist),  (-dist,-dist)]
+    # return [(0,dist), (dist,0), (dist,-dist), (dist,dist)]
 
 
 def get_expression(size, points=None):
@@ -36,7 +37,7 @@ def get_expression(size, points=None):
             cell_color_clause = Clause(size)
             for k in range(size):
                 cell_color_clause.add_positive(i,j,k)
-                for dist in range(size):
+                for dist in range(1,i+1):
 
                     for dist_i, dist_j in get_moves(dist):
                         x,y = i+dist_i, j+dist_j
