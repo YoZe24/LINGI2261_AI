@@ -3,6 +3,7 @@
 The way to use this code is to subclass Problem to create a class of problems,
 then create problem instances and solve them with calls to the various search
 functions."""
+import time
 
 from utils import *
 import sys
@@ -44,10 +45,10 @@ class Problem:
         and action. The default method costs 1 for every step in the path."""
         return c + 1
 
-    def value(self):
+    def value(self,state):
         """For optimization problems, each state has a value.  Hill-climbing
         and related algorithms try to maximize this value."""
-        abstract
+        return self.fitness(state)
 #______________________________________________________________________________
     
 class Node:
@@ -209,6 +210,9 @@ class LSNode:
         self.problem = problem
         self.state = state
         self.step = step
+        self.max_fit = math.inf
+        self.max_limit = 0
+        self.max_time = 0
         self._value = None
 
     def __repr__(self):
@@ -234,6 +238,11 @@ def random_walk(problem, limit=100, callback=None):
     If callback is not None, it must be a one-argument function that will be
     called at each step with the current node.
     """
+    global_cpt = 0
+    global_max = math.inf
+    global_time_start = time.time()
+    global_time = 0
+
     current = LSNode(problem, problem.initial, 0)
     best = current
     for step in range(limit):
@@ -242,6 +251,16 @@ def random_walk(problem, limit=100, callback=None):
         current = random.choice(list(current.expand()))
         if current.value() > best.value():
             best = current
+
+        if current.value() < global_max:
+            global_max = best.value()
+            global_cpt = step
+            global_time = time.time() - global_time_start
+
+    best.max_fit = global_max
+    best.max_limit = global_cpt
+    best.max_time = global_time
+
     return best
 
 

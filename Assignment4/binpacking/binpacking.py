@@ -123,6 +123,11 @@ def maxvalue(problem, limit=100, callback=None):
 
     best = current
 
+    global_cpt = 0
+    global_max = math.inf
+    global_time_start = time.time()
+    global_time = 0
+
     for step in range(limit):
         if callback is not None:
             callback(current)
@@ -139,7 +144,16 @@ def maxvalue(problem, limit=100, callback=None):
                 max_state = next_state
                 max_fitness = next_fitness
 
+        if max_fitness < global_max:
+            global_max = max_fitness
+            global_cpt = step
+            global_time = time.time() - global_time_start
+
         best = LSNode(problem, max_state, step + 1)
+
+    best.max_fit = global_max
+    best.max_limit = global_cpt + 1
+    best.max_time = global_time
 
     return best
 
@@ -147,6 +161,11 @@ def maxvalue(problem, limit=100, callback=None):
 def randomized_maxvalue(problem, limit=100, callback=None):
     current = LSNode(problem, problem.initial, 0)
     best = current
+
+    global_cpt = 0
+    global_max = math.inf
+    global_time_start = time.time()
+    global_time = 0
 
     for step in range(limit):
         if callback is not None:
@@ -158,6 +177,16 @@ def randomized_maxvalue(problem, limit=100, callback=None):
         rand = random.randint(0,4)
         best = LSNode(problem, successors[rand].state, step + 1)
 
+        best_state = successors[rand].state
+        if problem.fitness(best_state) < global_max:
+            global_max = problem.fitness(best_state)
+            global_cpt = step
+            global_time = time.time() - global_time_start
+
+    best.max_fit = global_max
+    best.max_limit = global_cpt + 1
+    best.max_time = global_time
+
     return best
 
 #####################
@@ -166,25 +195,40 @@ def randomized_maxvalue(problem, limit=100, callback=None):
 if __name__ == '__main__':
     ### For INGINIOUS ###
     # info = read_instance(sys.argv[1])
+    for i in range(1,11):
+        info = read_instance("instances/i0"+str(i)+".txt")
+        init_state = State(info[0], info[1])
+        bp_problem = BinPacking(init_state)
 
-    info = read_instance("instances/i01.txt")
-    init_state = State(info[0], info[1])
-    bp_problem = BinPacking(init_state)
+        mean_time,mean_fit,mean_limit = 0,0,0
+        node = None
+        j = 0
+        for j in range(10):
 
-    step_limit = 100
-    choose = 0
-    start = time.time()
+            step_limit = 100
+            choose = 2
+            start = time.time()
 
-    if not choose:
-        node = maxvalue(bp_problem, step_limit)
-    elif choose:
-        node = randomized_maxvalue(bp_problem, step_limit)
-    else:
-        node = random_walk(bp_problem, step_limit)
+            if choose == 0:
+                node = maxvalue(bp_problem, step_limit)
+            elif choose == 1:
+                node = randomized_maxvalue(bp_problem, step_limit)
+            else:
+                node = random_walk(bp_problem, step_limit)
 
-    time = time.time() - start
+            time_now = time.time() - start
+            mean_time += node.max_time
+            mean_fit += node.max_fit
+            mean_limit += node.max_limit
 
-    print(node.state)
-    print("T(s) : " + str(time))
-    print("Fitness : " + str(bp_problem.fitness(node.state)))
-    print("Nb. Steps : " + str(node.step))
+        j+=1
+        mean_time /= j
+        mean_fit /= j
+        mean_limit /= j
+
+        # print(str(i) + " & " + str(round(node.best_time*1000)) + " & " + str(node.max_fit) + " & " + str(node.limit))
+        print(str(i) + " & " + str(round(mean_time*1000)) + " & " + str(round(mean_fit,4)) + " & " + str(round(mean_limit,1)))
+        # print(node.state)
+        # print("T(s) : " + str(time_now))
+        # print("Fitness : " + str(bp_problem.fitness(node.state)))
+        # print("Nb. Steps : " + str(node.step))
